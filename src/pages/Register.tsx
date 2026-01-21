@@ -38,7 +38,7 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!acceptTerms) {
       toast({
         title: "Terms Required",
@@ -59,15 +59,37 @@ const Register = () => {
 
     setIsLoading(true);
 
-    // Simulate registration - will be replaced with actual auth
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
       toast({
-        title: "Authentication Required",
-        description: "Backend authentication needs to be configured first.",
+        title: "Account Created",
+        description: "Your account has been created successfully. You can now sign in.",
+      });
+
+      // Redirect to login
+      window.location.href = '/login';
+    } catch (error: any) {
+      toast({
+        title: "Registration Failed",
+        description: error.message,
         variant: "destructive",
       });
-    }, 1000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -167,15 +189,14 @@ const Register = () => {
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-300 ${
-                          passwordStrength <= 2
+                        className={`h-full transition-all duration-300 ${passwordStrength <= 2
                             ? "bg-destructive"
                             : passwordStrength <= 3
-                            ? "bg-accent"
-                            : passwordStrength <= 4
-                            ? "bg-primary"
-                            : "bg-green-500"
-                        }`}
+                              ? "bg-accent"
+                              : passwordStrength <= 4
+                                ? "bg-primary"
+                                : "bg-green-500"
+                          }`}
                         style={{ width: `${(passwordStrength / 5) * 100}%` }}
                       />
                     </div>
@@ -193,9 +214,8 @@ const Register = () => {
                     ].map((item, index) => (
                       <div
                         key={index}
-                        className={`flex items-center gap-1.5 ${
-                          item.check ? "text-green-500" : "text-muted-foreground"
-                        }`}
+                        className={`flex items-center gap-1.5 ${item.check ? "text-green-500" : "text-muted-foreground"
+                          }`}
                       >
                         {item.check ? (
                           <Check className="w-3 h-3" />

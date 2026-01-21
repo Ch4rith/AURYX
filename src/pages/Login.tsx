@@ -19,15 +19,40 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate login - will be replaced with actual auth
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
       toast({
-        title: "Authentication Required",
-        description: "Backend authentication needs to be configured first.",
+        title: "Success",
+        description: "Welcome back!",
+      });
+
+      // Redirect to dashboard
+      window.location.href = '/dashboard';
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message,
         variant: "destructive",
       });
-    }, 1000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

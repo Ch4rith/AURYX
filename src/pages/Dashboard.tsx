@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
 import CursorGradientBackground from "@/components/CursorGradientBackground";
@@ -18,8 +19,42 @@ import {
   AlertTriangle,
   TrendingUp,
 } from "lucide-react";
+import { ChartContainer, ChartConfig } from "@/components/ui/chart";
+import { Bar, BarChart } from "recharts";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [activities, setActivities] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+
+    const fetchActivities = async () => {
+      try {
+        const response = await fetch('/api/activities');
+        const data = await response.json();
+        if (response.ok) {
+          setActivities(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch activities:", error);
+      }
+    };
+
+    fetchActivities();
+  }, [navigate]);
+
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", active: true },
     { icon: Users, label: "Users" },
@@ -60,13 +95,6 @@ const Dashboard = () => {
     },
   ];
 
-  const recentActivity = [
-    { user: "john@company.com", action: "Logged in", time: "2 min ago", status: "success" },
-    { user: "sarah@company.com", action: "Password changed", time: "15 min ago", status: "success" },
-    { user: "mike@company.com", action: "Failed login attempt", time: "1 hour ago", status: "warning" },
-    { user: "admin@company.com", action: "Role updated", time: "2 hours ago", status: "info" },
-    { user: "jane@company.com", action: "Account created", time: "3 hours ago", status: "success" },
-  ];
 
   return (
     <div className="min-h-screen relative flex">
@@ -82,11 +110,10 @@ const Dashboard = () => {
           {menuItems.map((item, index) => (
             <button
               key={index}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                item.active
-                  ? "bg-primary/20 text-foreground shadow-lg shadow-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${item.active
+                ? "bg-primary/20 text-foreground shadow-lg shadow-primary/10"
+                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                }`}
             >
               <item.icon className="w-5 h-5" />
               {item.label}
@@ -96,7 +123,15 @@ const Dashboard = () => {
 
         <div className="p-4 border-t border-white/5">
           <Link to="/">
-            <Button variant="ghost" className="w-full justify-start text-muted-foreground">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-muted-foreground"
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/login');
+              }}
+            >
               <LogOut className="w-5 h-5 mr-3" />
               Sign Out
             </Button>
@@ -130,8 +165,8 @@ const Dashboard = () => {
                 AD
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-foreground">Admin User</p>
-                <p className="text-xs text-muted-foreground">Administrator</p>
+                <p className="text-sm font-medium text-foreground">{user?.name || "Admin User"}</p>
+                <p className="text-xs text-muted-foreground">{user?.role || "Administrator"}</p>
               </div>
               <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -143,7 +178,7 @@ const Dashboard = () => {
           {/* Welcome Section */}
           <div className="mb-8">
             <h1 className="text-3xl font-display font-bold text-foreground mb-2">
-              Welcome back, Admin
+              Welcome back, {user?.name?.split(' ')[0] || "Admin"}
             </h1>
             <p className="text-muted-foreground">
               Here's what's happening with your security platform today.
@@ -162,9 +197,8 @@ const Dashboard = () => {
                     <stat.icon className="w-6 h-6 text-primary-glow" />
                   </div>
                   <span
-                    className={`flex items-center gap-1 text-sm font-medium ${
-                      stat.trend === "up" ? "text-green-500" : "text-destructive"
-                    }`}
+                    className={`flex items-center gap-1 text-sm font-medium ${stat.trend === "up" ? "text-green-500" : "text-destructive"
+                      }`}
                   >
                     <TrendingUp
                       className={`w-4 h-4 ${stat.trend === "down" ? "rotate-180" : ""}`}
@@ -188,29 +222,30 @@ const Dashboard = () => {
                 Recent Activity
               </h2>
               <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
+                {activities.length > 0 ? activities.map((activity, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between py-3 border-b border-white/5 last:border-0"
                   >
                     <div className="flex items-center gap-4">
                       <div
-                        className={`w-2 h-2 rounded-full ${
-                          activity.status === "success"
-                            ? "bg-green-500"
-                            : activity.status === "warning"
+                        className={`w-2 h-2 rounded-full ${activity.status === "success"
+                          ? "bg-green-500"
+                          : activity.status === "warning"
                             ? "bg-accent"
                             : "bg-primary"
-                        }`}
+                          }`}
                       />
                       <div>
                         <p className="text-sm text-foreground">{activity.action}</p>
-                        <p className="text-xs text-muted-foreground">{activity.user}</p>
+                        <p className="text-xs text-muted-foreground">{activity.user?.email}</p>
                       </div>
                     </div>
-                    <span className="text-xs text-muted-foreground">{activity.time}</span>
+                    <span className="text-xs text-muted-foreground">{new Date(activity.createdAt).toLocaleTimeString()}</span>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-sm text-muted-foreground">No recent activity found.</p>
+                )}
               </div>
             </div>
 
@@ -237,6 +272,7 @@ const Dashboard = () => {
                   View Reports
                 </Button>
               </div>
+
             </div>
           </div>
         </div>

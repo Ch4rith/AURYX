@@ -7,7 +7,7 @@
 @layer base {
   :root {
     /* AURYX Design System - Premium Dark Theme */
-    
+
     /* Core backgrounds */
     --background: 240 10% 6%;
     --background-deep: 240 12% 4%;
@@ -90,7 +90,12 @@
     font-family: 'Inter', sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Space Grotesk', sans-serif;
   }
 }
@@ -132,9 +137,12 @@
   }
 
   @keyframes gradient-shift {
-    0%, 100% {
+
+    0%,
+    100% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }
@@ -145,9 +153,12 @@
   }
 
   @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: translateY(0px);
     }
+
     50% {
       transform: translateY(-10px);
     }
@@ -158,10 +169,13 @@
   }
 
   @keyframes pulse-glow {
-    0%, 100% {
+
+    0%,
+    100% {
       opacity: 0.5;
       filter: blur(60px);
     }
+
     50% {
       opacity: 0.8;
       filter: blur(80px);
